@@ -1,0 +1,82 @@
+{% extends 'shop/basic.html' %}
+
+{% block title %}{{product.product_name}} - My Awesome Cart{% endblock %}
+
+{% block body %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="row">
+                <img src="/media/{{product.image}}" width="233px" height="385px">
+            </div>
+            <div class="row my-2">
+                <a href="/shop/checkout"><button class="btn btn-success mx-3">Buy Now</button></a>
+                <button id="pr{{product.id}}" class="btn btn-primary cart">Add To Cart</button>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h5>{{product.product_name}}</h5>
+            <p><b>Rs.{{product.price}}</b></p>
+            <p>{{product.desc}}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden elements for cart functionality -->
+<span id="namepr{{product.id}}" style="display:none;">{{product.product_name}}</span>
+<span id="pricepr{{product.id}}" style="display:none;">{{product.price}}</span>
+{% endblock %}
+
+{% block js %}
+<script>
+if (localStorage.getItem('cart') == null) {
+    var cart = {};
+} else {
+    cart = JSON.parse(localStorage.getItem('cart'));
+    updateCart(cart);
+}
+
+$('.cart').click(function () {
+    var idstr = this.id.toString(); // e.g., pr12
+    if (cart[idstr] != undefined) {
+        cart[idstr][0] += 1;
+    } else {
+        var name = document.getElementById('name' + idstr).innerHTML;
+        var price = document.getElementById('price' + idstr).innerHTML;
+        cart[idstr] = [1, name, parseInt(price)];
+    }
+    updateCart(cart);
+});
+
+// Popover & Cart Updating
+$('#popcart').popover();
+function updatePopover(cart) {
+    let popStr = "<h5>Cart for your items:</h5><div class='mx-2 my-2'>";
+    let i = 1;
+    for (let item in cart) {
+        popStr += "<b>" + i + "</b>. " + cart[item][1].slice(0, 19) + "... Qty: " + cart[item][0] + "<br>";
+        i++;
+    }
+    popStr += "</div><a href='/shop/checkout'><button class='btn btn-primary' id='checkout'>Checkout</button></a> <button onclick='clearCart()' class='btn btn-primary' id='clearCart'>Clear Cart</button>";
+    document.getElementById('popcart').setAttribute('data-content', popStr);
+    $('#popcart').popover('show');
+}
+
+function clearCart() {
+    localStorage.clear();
+    cart = {};
+    updateCart(cart);
+}
+
+function updateCart(cart) {
+    let sum = 0;
+    for (let item in cart) {
+        sum += cart[item][0];
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+    document.getElementById('cart').innerHTML = sum;
+    updatePopover(cart);
+}
+</script>
+{% endblock %}
